@@ -1,0 +1,30 @@
+# 9th prgm
+!pip install wikipedia
+import wikipedia, requests
+from bs4 import BeautifulSoup
+
+def fetch_info(name):
+    try:
+        p = wikipedia.page(name)
+        s = wikipedia.summary(name, sentences=2)
+        rows = BeautifulSoup(requests.get(p.url).text, 'html.parser').select('.infobox tr')
+    except wikipedia.exceptions.DisambiguationError as e:
+        return f"Disambiguation Error: {e.options}"
+    except wikipedia.exceptions.PageError:
+        return f"No page found for '{name}'"
+
+    f, h = "Not Found", "Not Found"
+    for r in rows:
+        th, td = r.find("th"), r.find("td")
+        if not th or not td: 
+            continue
+        t = th.text.strip().lower()
+        if "founded" in t or "established" in t: 
+            f = td.text.strip()
+        if "headquarters" in t or "location" in t: 
+            h = td.text.strip()
+
+    b = [c for c in ["New York", "London", "Tokyo", "Bangalore", "Davangere"] if c.lower() in p.content.lower()] or ["Not Found"]
+    return f"Name: {name}\nFounded: {f}\nHeadquarters: {h}\nBranches: {', '.join(b)}\nSummary: {s}"
+
+print(fetch_info(input("Enter institution name: ")))
