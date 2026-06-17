@@ -1,0 +1,17 @@
+# 8th prgm
+!pip install langchain cohere langchain-community
+from langchain_community.llms import Cohere
+from langchain_community.document_loaders import TextLoader
+from langchain.prompts import PromptTemplate
+from langchain.chains import LLMChain
+
+text = TextLoader("/content/sample text.txt").load()[0].page_content
+
+prompt = PromptTemplate(
+    input_variables=["text"],
+    template="Summarize this text:\n\n{text}\n\nSummary:"
+)
+
+llm = Cohere(cohere_api_key="JuJktEEFgPDKDmzaUDfmmEaIMIdTroCQcvwiUInx", temperature=0.7)
+summary = LLMChain(llm=llm, prompt=prompt).run(text=text)
+print("\nSummary:\n", summary)
