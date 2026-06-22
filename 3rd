@@ -1,40 +1,36 @@
-import numpy as np
 import pandas as pd
-from sklearn.datasets import load_iris
-from sklearn.decomposition import PCA
-import matplotlib.pyplot as plt
 
-# Load the Iris dataset
-iris = load_iris()
-data = iris.data
-labels = iris.target
-label_names = iris.target_names
+def find_s_algorithm(file_path):
+    # Load training data
+    data = pd.read_csv(file_path)
 
-# Convert to a DataFrame for better visualization
-iris_df = pd.DataFrame(data, columns=iris.feature_names)
+    print("Training Data:")
+    print(data)
 
-# Perform PCA to reduce dimensionality to 2
-pca = PCA(n_components=2)
-data_reduced = pca.fit_transform(data)
+    # Separate attributes and target class
+    attributes = data.columns[:-1]
+    class_label = data.columns[-1]
 
-# Create a DataFrame for the reduced data
-reduced_df = pd.DataFrame(data_reduced, columns=['Principal Component 1', 'Principal Component 2'])
-reduced_df['Label'] = labels
+    hypothesis = None
 
-# Plot the reduced data
-plt.figure(figsize=(8, 6))
-colors = ['r', 'g', 'b']
-for i, label in enumerate(np.unique(labels)):
-    plt.scatter(
-        reduced_df[reduced_df['Label'] == label]['Principal Component 1'],
-        reduced_df[reduced_df['Label'] == label]['Principal Component 2'],
-        label=label_names[label],
-        color=colors[i]
-    )
+    # Process each training example
+    for _, row in data.iterrows():
+        if row[class_label] == 'Yes':
+            # Initialize hypothesis with first positive example
+            if hypothesis is None:
+                hypothesis = list(row[attributes])
+            else:
+                # Generalize hypothesis where needed
+                for i in range(len(attributes)):
+                    if hypothesis[i] != row[attributes[i]]:
+                        hypothesis[i] = '?'
 
-plt.title('PCA on Iris Dataset')
-plt.xlabel('Principal Component 1')
-plt.ylabel('Principal Component 2')
-plt.legend()
-plt.grid()
-plt.show()
+    return hypothesis
+
+# Main program
+file_path = r"C:\Users\Dell\Desktop\training_data.csv"
+
+final_hypothesis = find_s_algorithm(file_path)
+
+print("\nFinal Hypothesis:")
+print(final_hypothesis)
