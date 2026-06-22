@@ -1,37 +1,22 @@
-# 2nd prgm
+import pandas as pd
+import seaborn as sns
 import matplotlib.pyplot as plt
-from sklearn.decomposition import PCA
-from gensim.downloader import load
+from sklearn.datasets import fetch_california_housing
 
-def reduce_dimensions(embeddings):
-    pca = PCA(n_components=2)
-    reduced_embeddings = pca.fit_transform(embeddings)
-    return reduced_embeddings
+# Step 1: Load the California Housing Dataset
+california_data = fetch_california_housing(as_frame=True)
+data = california_data.frame
 
-def visualize_embeddings(words, reduced_embeddings):
-    plt.figure(figsize=(10, 6))
-    for i, word in enumerate(words):
-        x, y = reduced_embeddings[i]
-        plt.scatter(x, y, color='blue', marker='o')
-        plt.text(x + 0.02, y + 0.02, word, fontsize=12)
-    plt.title("2D Visualization of Word Embeddings")
-    plt.xlabel("PCA Component 1")
-    plt.ylabel("PCA Component 2")
-    plt.grid()
-    plt.show()
+# Step 2: Compute the correlation matrix
+correlation_matrix = data.corr()
 
-def get_similar_words(word, model):
-    print(f"Top 5 words similar to '{word}':")
-    similar_words = model.most_similar(word, topn=10)
-    for similar_word, similarity in similar_words:
-        print(f"{similar_word} ({similarity:.4f})")
+# Step 3: Visualize the correlation matrix using a heatmap
+plt.figure(figsize=(10, 8))
+sns.heatmap(correlation_matrix, annot=True, cmap='coolwarm', fmt='.2f', linewidths=0.5)
+plt.title('Correlation Matrix of California Housing Features')
+plt.show()
 
-print("Loading pre-trained Glove model (50 dimensions)...")
-model = load("glove-wiki-gigaword-50")
-
-words = ['football', 'basketball', 'soccer', 'tennis', 'cricket', 'hockey', 'baseball', 'golf', 'volleyball', 'rugby']
-embeddings = [model[word] for word in words]
-
-reduced_embeddings = reduce_dimensions(embeddings)
-visualize_embeddings(words, reduced_embeddings)
-get_similar_words("programming", model)
+# Step 4: Create a pair plot to visualize pairwise relationships
+sns.pairplot(data, diag_kind='kde', plot_kws={'alpha': 0.5})
+plt.suptitle('Pair Plot of California Housing Features', y=1.02)
+plt.show()
