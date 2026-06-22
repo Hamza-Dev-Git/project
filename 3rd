@@ -1,44 +1,40 @@
-# 3rd prgm
-from gensim.models import Word2Vec
+import numpy as np
+import pandas as pd
+from sklearn.datasets import load_iris
 from sklearn.decomposition import PCA
 import matplotlib.pyplot as plt
 
-corpus = [
-    "The patient was diagnosed with diabetes and hypertension.",
-    "MRI scans reveal abnormalities in the brain tissue.",
-    "The treatment involves antibiotics and regular monitoring.",
-    "Symptoms include fever, fatigue, and muscle pain.",
-    "The vaccine is effective against several viral infections.",
-    "Doctors recommend physical therapy for recovery.",
-    "The clinical trial results were published in the journal.",
-    "The surgeon performed a minimally invasive procedure.",
-    "The prescription includes pain relievers and anti-inflammatory drugs.",
-    "The diagnosis confirmed a rare genetic disorder."
-]
+# Load the Iris dataset
+iris = load_iris()
+data = iris.data
+labels = iris.target
+label_names = iris.target_names
 
-tokenized_corpus = [sentence.lower().split() for sentence in corpus]
-model = Word2Vec(sentences=tokenized_corpus, vector_size=5, window=2, min_count=1, epochs=5)
+# Convert to a DataFrame for better visualization
+iris_df = pd.DataFrame(data, columns=iris.feature_names)
 
-word = input("Enter a word: ").lower()
-if word in model.wv:
-    similar = model.wv.most_similar(word, topn=5)
-    print(f"Words similar to '{word}':")
-    for i, (w, score) in enumerate(similar, 1):
-        print(f"{i}. {w} (Similarity: {score:.4f})")
-else:
-    print("Word not found in vocabulary.")
-
-words = list(model.wv.index_to_key)
-word_vectors = model.wv[words]
+# Perform PCA to reduce dimensionality to 2
 pca = PCA(n_components=2)
-result = pca.fit_transform(word_vectors)
+data_reduced = pca.fit_transform(data)
 
-plt.figure(figsize=(10, 8))
-plt.scatter(result[:, 0], result[:, 1])
-for i, word in enumerate(words):
-    plt.annotate(word, xy=(result[i, 0], result[i, 1]))
-plt.title("Word Embeddings (PCA Projection)")
-plt.xlabel("PCA 1")
-plt.ylabel("PCA 2")
-plt.grid(True)
+# Create a DataFrame for the reduced data
+reduced_df = pd.DataFrame(data_reduced, columns=['Principal Component 1', 'Principal Component 2'])
+reduced_df['Label'] = labels
+
+# Plot the reduced data
+plt.figure(figsize=(8, 6))
+colors = ['r', 'g', 'b']
+for i, label in enumerate(np.unique(labels)):
+    plt.scatter(
+        reduced_df[reduced_df['Label'] == label]['Principal Component 1'],
+        reduced_df[reduced_df['Label'] == label]['Principal Component 2'],
+        label=label_names[label],
+        color=colors[i]
+    )
+
+plt.title('PCA on Iris Dataset')
+plt.xlabel('Principal Component 1')
+plt.ylabel('Principal Component 2')
+plt.legend()
+plt.grid()
 plt.show()
