@@ -1,38 +1,36 @@
-# 4th prgm
-!pip install cohere gensim
-import cohere
-import gensim.downloader as api
+import pandas as pd
 
-co = cohere.Client("iKCV07rBnBU5uYH40gPabT4cFY8DkEiZnZgxtIrr")   
-print("Loading word embeddings...")
-model = api.load("glove-wiki-gigaword-100")
-print("Model loaded successfully.")
+def find_s_algorithm(file_path):
+    # Load training data
+    data = pd.read_csv(file_path)
 
-prompt = "write an essay on natural disaster"
+    print("Training Data:")
+    print(data)
 
-def get_first_enriched_prompt(prompt, topn=3):
-    enriched_prompt = prompt
-    for word in prompt.split():
-        try:
-            similar_words = model.most_similar(word.strip('.,!?').lower(), topn=topn)
-            # Find the most similar replacement word
-            for sim, score in similar_words:
-                enriched_prompt = enriched_prompt.replace(word, sim)
-                break
-        except:
-            continue
-    return enriched_prompt
+    # Separate attributes and target class
+    attributes = data.columns[:-1]
+    class_label = data.columns[-1]
 
-def get_response(text):
-    try:
-        return co.chat(model="command-r", message=text).text.strip()
-    except Exception as e:
-        return f"Error: {e}"
+    hypothesis = None
 
-print(f"\nOriginal Prompt:\n{prompt}\nResponse:\n{get_response(prompt)}")
-enriched_prompt = get_first_enriched_prompt(prompt)
+    # Process each training example
+    for _, row in data.iterrows():
+        if row[class_label] == 'Yes':
+            # Initialize hypothesis with first positive example
+            if hypothesis is None:
+                hypothesis = list(row[attributes])
+            else:
+                # Generalize hypothesis where needed
+                for i in range(len(attributes)):
+                    if hypothesis[i] != row[attributes[i]]:
+                        hypothesis[i] = '?'
 
-if enriched_prompt:
-    print(f"\nEnriched Prompt:\n{enriched_prompt}\nResponse:\n{get_response(enriched_prompt)}")
-else:
-    print("\nNo enriched prompt could be generated.")
+    return hypothesis
+
+# Main program
+file_path = r"C:\Users\Dell\Desktop\training_data.csv"
+
+final_hypothesis = find_s_algorithm(file_path)
+
+print("\nFinal Hypothesis:")
+print(final_hypothesis)
