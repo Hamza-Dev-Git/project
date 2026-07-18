@@ -1,0 +1,491 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Field Kit // Cybersecurity Tooling</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700;800&family=Inter:wght@400;500;600&display=swap');
+
+  :root{
+    --ink:#0B0F14;
+    --panel:#111820;
+    --panel-2:#0E141B;
+    --line:#233040;
+    --line-soft:#1A2430;
+    --text:#E7EEF4;
+    --muted:#8996A5;
+    --dim:#5B6774;
+    --teal:#5EEAD4;
+    --coral:#F97362;
+    --gold:#E3B341;
+  }
+
+  *{box-sizing:border-box;}
+  html{scroll-behavior:smooth;}
+  body{
+    margin:0;
+    background:
+      radial-gradient(1200px 600px at 15% -10%, rgba(94,234,212,0.06), transparent 60%),
+      radial-gradient(1000px 500px at 100% 10%, rgba(249,115,98,0.05), transparent 55%),
+      var(--ink);
+    color:var(--text);
+    font-family:'Inter', sans-serif;
+    -webkit-font-smoothing:antialiased;
+  }
+  .mono{font-family:'JetBrains Mono', monospace;}
+
+  ::selection{ background:var(--teal); color:#03110E; }
+
+  a{color:inherit;}
+  :focus-visible{
+    outline:2px solid var(--teal);
+    outline-offset:3px;
+  }
+
+  .grid-overlay{
+    position:fixed; inset:0; pointer-events:none; z-index:0;
+    background-image:
+      linear-gradient(rgba(94,234,212,0.035) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(94,234,212,0.035) 1px, transparent 1px);
+    background-size:42px 42px;
+    mask-image:radial-gradient(ellipse 80% 60% at 50% 0%, black 0%, transparent 75%);
+  }
+
+  header{
+    position:relative; z-index:1;
+    max-width:1180px; margin:0 auto;
+    padding:64px 28px 40px;
+    border-bottom:1px solid var(--line-soft);
+  }
+  .topline{
+    display:flex; align-items:center; justify-content:space-between;
+    font-family:'JetBrains Mono', monospace;
+    font-size:12px; letter-spacing:0.14em; text-transform:uppercase;
+    color:var(--dim);
+    margin-bottom:56px;
+  }
+  .topline .dot{ color:var(--teal); }
+  .status{
+    display:flex; align-items:center; gap:8px;
+  }
+  .pulse{
+    width:7px; height:7px; border-radius:50%;
+    background:var(--teal);
+    box-shadow:0 0 0 0 rgba(94,234,212,0.7);
+    animation:pulse 2.4s infinite;
+  }
+  @keyframes pulse{
+    0%{ box-shadow:0 0 0 0 rgba(94,234,212,0.55); }
+    70%{ box-shadow:0 0 0 8px rgba(94,234,212,0); }
+    100%{ box-shadow:0 0 0 0 rgba(94,234,212,0); }
+  }
+
+  h1{
+    font-family:'JetBrains Mono', monospace;
+    font-weight:800;
+    font-size:clamp(34px, 6vw, 62px);
+    line-height:1.02;
+    letter-spacing:-0.01em;
+    margin:0 0 20px;
+  }
+  h1 span{ color:var(--teal); }
+  header p.lede{
+    max-width:560px;
+    color:var(--muted);
+    font-size:16px;
+    line-height:1.65;
+    margin:0 0 32px;
+  }
+  .legend{
+    display:flex; flex-wrap:wrap; gap:22px;
+    font-family:'JetBrains Mono', monospace;
+    font-size:11.5px; letter-spacing:0.06em; text-transform:uppercase;
+    color:var(--dim);
+  }
+  .legend .item{ display:flex; align-items:center; gap:8px; }
+  .legend .sw{ width:9px; height:9px; border-radius:2px; }
+
+  main{
+    position:relative; z-index:1;
+    max-width:1180px; margin:0 auto;
+    padding:48px 28px 90px;
+  }
+  .toolgrid{
+    display:grid;
+    grid-template-columns:repeat(3, 1fr);
+    gap:1px;
+    background:var(--line-soft);
+    border:1px solid var(--line-soft);
+  }
+  @media (max-width:920px){ .toolgrid{ grid-template-columns:repeat(2, 1fr); } }
+  @media (max-width:640px){ .toolgrid{ grid-template-columns:1fr; } }
+
+  .card{
+    position:relative;
+    background:var(--panel);
+    padding:26px 24px 24px;
+    display:flex; flex-direction:column;
+    min-height:430px;
+    border-top:2px solid var(--cat-color, var(--teal));
+    overflow:hidden;
+    transition:background .25s ease;
+  }
+  .card::before{
+    content:'';
+    position:absolute; inset:0;
+    background:linear-gradient(180deg, rgba(255,255,255,0.02), transparent 40%);
+    opacity:0; transition:opacity .25s ease;
+    pointer-events:none;
+  }
+  .card:hover{ background:var(--panel-2); }
+  .card:hover::before{ opacity:1; }
+
+  .card-head{
+    display:flex; align-items:flex-start; justify-content:space-between;
+    margin-bottom:18px;
+  }
+  .mark{
+    width:46px; height:46px;
+    border:1px solid var(--line);
+    border-radius:10px;
+    display:flex; align-items:center; justify-content:center;
+    color:var(--cat-color, var(--teal));
+    background:rgba(255,255,255,0.015);
+    flex-shrink:0;
+  }
+  .mark svg{ width:24px; height:24px; }
+
+  .tag{
+    font-family:'JetBrains Mono', monospace;
+    font-size:10.5px; letter-spacing:0.12em; text-transform:uppercase;
+    color:var(--cat-color, var(--teal));
+    border:1px solid currentColor;
+    padding:4px 8px; border-radius:20px;
+    opacity:0.85;
+    white-space:nowrap;
+  }
+
+  h3{
+    font-family:'JetBrains Mono', monospace;
+    font-size:19px; font-weight:700;
+    margin:0 0 4px;
+    letter-spacing:-0.01em;
+  }
+  .tagline{
+    font-size:11.5px; color:var(--dim);
+    font-family:'JetBrains Mono', monospace;
+    margin:0 0 14px;
+    letter-spacing:0.02em;
+  }
+  .desc{
+    font-size:14px; line-height:1.6;
+    color:var(--muted);
+    margin:0 0 18px;
+  }
+
+  .feat-label{
+    font-family:'JetBrains Mono', monospace;
+    font-size:10px; letter-spacing:0.14em; text-transform:uppercase;
+    color:var(--dim);
+    margin:0 0 9px;
+  }
+  .feat-list{
+    list-style:none; margin:0 0 20px; padding:0;
+    display:flex; flex-direction:column; gap:7px;
+  }
+  .feat-list li{
+    font-size:13px; color:var(--text);
+    padding-left:16px; position:relative;
+    line-height:1.4;
+  }
+  .feat-list li::before{
+    content:'›';
+    position:absolute; left:0; top:-1px;
+    color:var(--cat-color, var(--teal));
+    font-weight:700;
+  }
+
+  .card-foot{
+    margin-top:auto;
+    padding-top:16px;
+    border-top:1px dashed var(--line);
+  }
+  .cmd{
+    display:block;
+    font-family:'JetBrains Mono', monospace;
+    font-size:11px;
+    color:var(--dim);
+    margin-bottom:14px;
+    white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
+  }
+  .cmd .p{ color:var(--cat-color, var(--teal)); }
+
+  .btn{
+    display:flex; align-items:center; justify-content:space-between;
+    width:100%;
+    background:transparent;
+    border:1px solid var(--line);
+    color:var(--text);
+    font-family:'JetBrains Mono', monospace;
+    font-size:12.5px; letter-spacing:0.04em;
+    padding:11px 14px;
+    border-radius:8px;
+    text-decoration:none;
+    transition:border-color .2s ease, color .2s ease, background .2s ease, gap .2s ease;
+  }
+  .btn:hover{
+    border-color:var(--cat-color, var(--teal));
+    color:var(--cat-color, var(--teal));
+    background:rgba(255,255,255,0.02);
+  }
+  .btn .arrow{ transition:transform .2s ease; }
+  .btn:hover .arrow{ transform:translateX(3px); }
+
+  footer{
+    position:relative; z-index:1;
+    max-width:1180px; margin:0 auto;
+    padding:0 28px 70px;
+    color:var(--dim);
+    font-family:'JetBrains Mono', monospace;
+    font-size:12px; line-height:1.7;
+  }
+  footer .rule{ border-top:1px solid var(--line-soft); padding-top:22px; }
+  footer strong{ color:var(--muted); }
+
+  @media (prefers-reduced-motion: reduce){
+    .pulse{ animation:none; }
+    html{ scroll-behavior:auto; }
+  }
+</style>
+</head>
+<body>
+
+<div class="grid-overlay"></div>
+
+<header>
+  <div class="topline">
+    <span><span class="dot">//</span> RECON &nbsp;·&nbsp; ANALYSIS &nbsp;·&nbsp; EXPLOIT &nbsp;·&nbsp; DEFENSE</span>
+    <span class="status"><span class="pulse"></span> 9 TOOLS INDEXED</span>
+  </div>
+  <h1>Field Kit for<br><span>Security Practitioners.</span></h1>
+  <p class="lede">A working reference of the tools most commonly reached for across the pentest and blue-team lifecycle — from first scan to final report. Use only against systems you own or are explicitly authorized to test.</p>
+  <div class="legend">
+    <span class="item"><span class="sw" style="background:var(--teal)"></span>Recon &amp; Analysis</span>
+    <span class="item"><span class="sw" style="background:var(--coral)"></span>Offensive Testing</span>
+    <span class="item"><span class="sw" style="background:var(--gold)"></span>Platform</span>
+  </div>
+</header>
+
+<main>
+  <div class="toolgrid">
+
+    <!-- NMAP -->
+    <article class="card" style="--cat-color:var(--teal)">
+      <div class="card-head">
+        <div class="mark"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="4.5"/><line x1="12" y1="12" x2="18.5" y2="6"/><circle cx="12" cy="12" r="1.2" fill="currentColor" stroke="none"/></svg></div>
+        <span class="tag">Recon</span>
+      </div>
+      <h3>Nmap</h3>
+      <p class="tagline">Network Mapper</p>
+      <p class="desc">The standard for host discovery and port scanning — sweeps networks to find live hosts, open ports, running services, and OS fingerprints before any deeper testing begins.</p>
+      <p class="feat-label">Capabilities</p>
+      <ul class="feat-list">
+        <li>Host &amp; port discovery across large IP ranges</li>
+        <li>Service and OS version detection</li>
+        <li>Scriptable engine (NSE) for custom checks</li>
+        <li>Stealth, TCP, UDP, and timing-tuned scan modes</li>
+      </ul>
+      <div class="card-foot">
+        <span class="cmd"><span class="p">$</span> nmap -sV -A target.local</span>
+        <a class="btn" href="https://nmap.org" target="_blank" rel="noopener noreferrer">Official Website <span class="arrow">↗</span></a>
+      </div>
+    </article>
+
+    <!-- WIRESHARK -->
+    <article class="card" style="--cat-color:var(--teal)">
+      <div class="card-head">
+        <div class="mark"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M2 12c2-4 4-4 5 0s3 4 5 0 3-4 5 0 3 4 5 0"/></svg></div>
+        <span class="tag">Analysis</span>
+      </div>
+      <h3>Wireshark</h3>
+      <p class="tagline">Packet Analyzer</p>
+      <p class="desc">A deep-inspection packet capture tool that decodes traffic across hundreds of protocols, letting analysts see exactly what's moving across a network in real time or from a saved capture.</p>
+      <p class="feat-label">Capabilities</p>
+      <ul class="feat-list">
+        <li>Live capture and offline .pcap analysis</li>
+        <li>Protocol dissection for 1000+ protocols</li>
+        <li>Custom display and capture filters</li>
+        <li>Stream reassembly for full conversations</li>
+      </ul>
+      <div class="card-foot">
+        <span class="cmd"><span class="p">$</span> wireshark -i eth0 -k</span>
+        <a class="btn" href="https://www.wireshark.org" target="_blank" rel="noopener noreferrer">Official Website <span class="arrow">↗</span></a>
+      </div>
+    </article>
+
+    <!-- BURP SUITE -->
+    <article class="card" style="--cat-color:var(--coral)">
+      <div class="card-head">
+        <div class="mark"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="9" r="3"/><path d="M12 12v9M8 15l-3 2M16 15l3 2M8 19l-3 2M16 19l3 2M6 9H3M18 9h3"/></svg></div>
+        <span class="tag">Web</span>
+      </div>
+      <h3>Burp Suite</h3>
+      <p class="tagline">Web Application Testing</p>
+      <p class="desc">An intercepting proxy at the center of most web app assessments — inspects and modifies traffic between browser and server, and automates crawling for common vulnerabilities.</p>
+      <p class="feat-label">Capabilities</p>
+      <ul class="feat-list">
+        <li>Intercepting proxy for live request tampering</li>
+        <li>Automated crawler and vulnerability scanner</li>
+        <li>Repeater &amp; Intruder for manual and fuzzed testing</li>
+        <li>Extensible via the BApp marketplace</li>
+      </ul>
+      <div class="card-foot">
+        <span class="cmd"><span class="p">$</span> burpsuite --project-file=scan.burp</span>
+        <a class="btn" href="https://portswigger.net/burp" target="_blank" rel="noopener noreferrer">Official Website <span class="arrow">↗</span></a>
+      </div>
+    </article>
+
+    <!-- METASPLOIT -->
+    <article class="card" style="--cat-color:var(--coral)">
+      <div class="card-head">
+        <div class="mark"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="9"/><line x1="12" y1="3" x2="12" y2="7"/><line x1="12" y1="17" x2="12" y2="21"/><line x1="3" y1="12" x2="7" y2="12"/><line x1="17" y1="12" x2="21" y2="12"/><circle cx="12" cy="12" r="1.4" fill="currentColor" stroke="none"/></svg></div>
+        <span class="tag">Exploit</span>
+      </div>
+      <h3>Metasploit</h3>
+      <p class="tagline">Exploitation Framework</p>
+      <p class="desc">A modular framework for developing, testing, and running exploits against known vulnerabilities — used to validate whether a weakness is actually exploitable in a controlled environment.</p>
+      <p class="feat-label">Capabilities</p>
+      <ul class="feat-list">
+        <li>Large, regularly updated exploit &amp; payload library</li>
+        <li>Post-exploitation and session management</li>
+        <li>Meterpreter for interactive remote control</li>
+        <li>Integrates with Nmap and Nessus scan data</li>
+      </ul>
+      <div class="card-foot">
+        <span class="cmd"><span class="p">$</span> msfconsole -q</span>
+        <a class="btn" href="https://www.metasploit.com" target="_blank" rel="noopener noreferrer">Official Website <span class="arrow">↗</span></a>
+      </div>
+    </article>
+
+    <!-- NESSUS -->
+    <article class="card" style="--cat-color:var(--teal)">
+      <div class="card-head">
+        <div class="mark"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M12 3l7 3v6c0 4.5-3 7.5-7 9-4-1.5-7-4.5-7-9V6l7-3z"/><path d="M9 12l2 2 4-4"/></svg></div>
+        <span class="tag">Scan</span>
+      </div>
+      <h3>Nessus</h3>
+      <p class="tagline">Vulnerability Scanner</p>
+      <p class="desc">A widely deployed vulnerability scanner that checks hosts against a huge, continuously updated plugin library to surface missing patches, misconfigurations, and known CVEs.</p>
+      <p class="feat-label">Capabilities</p>
+      <ul class="feat-list">
+        <li>200,000+ plugin checks across systems &amp; software</li>
+        <li>Compliance and configuration auditing</li>
+        <li>Scheduled scans with prioritized risk scoring</li>
+        <li>Exportable, report-ready findings</li>
+      </ul>
+      <div class="card-foot">
+        <span class="cmd"><span class="p">$</span> nessuscli scan --new</span>
+        <a class="btn" href="https://www.tenable.com/products/nessus" target="_blank" rel="noopener noreferrer">Official Website <span class="arrow">↗</span></a>
+      </div>
+    </article>
+
+    <!-- KALI LINUX -->
+    <article class="card" style="--cat-color:var(--gold)">
+      <div class="card-head">
+        <div class="mark"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="4" width="18" height="14" rx="1.5"/><path d="M6 9l3 3-3 3M12 15h6"/></svg></div>
+        <span class="tag">Platform</span>
+      </div>
+      <h3>Kali Linux</h3>
+      <p class="tagline">Penetration Testing OS</p>
+      <p class="desc">A Debian-based Linux distribution built specifically for security work, shipping with hundreds of testing tools pre-installed and configured so assessments can start immediately.</p>
+      <p class="feat-label">Capabilities</p>
+      <ul class="feat-list">
+        <li>600+ pre-installed security tools</li>
+        <li>Live-boot, persistent USB, and ARM builds</li>
+        <li>Rolling release with frequent tool updates</li>
+        <li>Purpose-built for pentesting &amp; forensics</li>
+      </ul>
+      <div class="card-foot">
+        <span class="cmd"><span class="p">$</span> uname -a</span>
+        <a class="btn" href="https://www.kali.org" target="_blank" rel="noopener noreferrer">Official Website <span class="arrow">↗</span></a>
+      </div>
+    </article>
+
+    <!-- OWASP ZAP -->
+    <article class="card" style="--cat-color:var(--coral)">
+      <div class="card-head">
+        <div class="mark"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="7"/><circle cx="12" cy="12" r="2.5"/><line x1="12" y1="2" x2="12" y2="5"/><line x1="12" y1="19" x2="12" y2="22"/><line x1="2" y1="12" x2="5" y2="12"/><line x1="19" y1="12" x2="22" y2="12"/></svg></div>
+        <span class="tag">Web</span>
+      </div>
+      <h3>OWASP ZAP</h3>
+      <p class="tagline">Zed Attack Proxy</p>
+      <p class="desc">A free, open-source web app scanner maintained by OWASP — a lighter, community-driven alternative to commercial proxies, built for both beginners and CI-integrated automated scanning.</p>
+      <p class="feat-label">Capabilities</p>
+      <ul class="feat-list">
+        <li>Automated and manual web app scanning</li>
+        <li>Passive scanning safe for production traffic checks</li>
+        <li>REST API for CI/CD pipeline integration</li>
+        <li>Free and fully open-source</li>
+      </ul>
+      <div class="card-foot">
+        <span class="cmd"><span class="p">$</span> zap.sh -cmd -quickurl target</span>
+        <a class="btn" href="https://www.zaproxy.org" target="_blank" rel="noopener noreferrer">Official Website <span class="arrow">↗</span></a>
+      </div>
+    </article>
+
+    <!-- JOHN THE RIPPER -->
+    <article class="card" style="--cat-color:var(--coral)">
+      <div class="card-head">
+        <div class="mark"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="8" cy="8" r="4"/><path d="M11 11l9 9M17 17l2-2M20 20l2-2"/></svg></div>
+        <span class="tag">Crack</span>
+      </div>
+      <h3>John the Ripper</h3>
+      <p class="tagline">Password Cracker</p>
+      <p class="desc">A fast, offline password-cracking tool used to test password strength by recovering weak hashes — a staple for auditing credential policies rather than attacking live logins.</p>
+      <p class="feat-label">Capabilities</p>
+      <ul class="feat-list">
+        <li>Auto-detects hash types across formats</li>
+        <li>Dictionary, brute-force, and rule-based attacks</li>
+        <li>GPU-accelerated cracking support</li>
+        <li>Wide platform and hash-format support</li>
+      </ul>
+      <div class="card-foot">
+        <span class="cmd"><span class="p">$</span> john --wordlist=rockyou.txt hash.txt</span>
+        <a class="btn" href="https://www.openwall.com/john/" target="_blank" rel="noopener noreferrer">Official Website <span class="arrow">↗</span></a>
+      </div>
+    </article>
+
+    <!-- HYDRA -->
+    <article class="card" style="--cat-color:var(--coral)">
+      <div class="card-head">
+        <div class="mark"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="5" y="11" width="14" height="9" rx="1.5"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/><circle cx="12" cy="15.5" r="1.4" fill="currentColor" stroke="none"/></svg></div>
+        <span class="tag">Crack</span>
+      </div>
+      <h3>Hydra</h3>
+      <p class="tagline">Login Brute-Forcer</p>
+      <p class="desc">A parallelized online login-cracking tool that tests credential lists against live services — SSH, FTP, HTTP forms, and dozens more — to check for weak or default passwords.</p>
+      <p class="feat-label">Capabilities</p>
+      <ul class="feat-list">
+        <li>Supports 50+ protocols and services</li>
+        <li>Highly parallel, multi-threaded attacks</li>
+        <li>Works with custom user/password wordlists</li>
+        <li>Scriptable for repeatable credential audits</li>
+      </ul>
+      <div class="card-foot">
+        <span class="cmd"><span class="p">$</span> hydra -l admin -P list.txt ssh://target</span>
+        <a class="btn" href="https://github.com/vanhauser-thc/thc-hydra" target="_blank" rel="noopener noreferrer">Official Website <span class="arrow">↗</span></a>
+      </div>
+    </article>
+
+  </div>
+</main>
+
+<footer>
+  <div class="rule">
+    <strong>Authorized use only.</strong> These tools are built for defenders, auditors, and testers working within the scope of written permission. Running them against systems you don't own or aren't authorized to assess is illegal in most jurisdictions.
+  </div>
+</footer>
+
+</body>
+</html>
